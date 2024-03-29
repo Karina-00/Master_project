@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 
 
-class OneHotEncoder:
+class CustomOneHotEncoder:
     def __init__(self, columns_for_one_hot_encoding, new_column_names_map, advanced_encoding=False):
         self.columns_for_one_hot_encoding = columns_for_one_hot_encoding
         self.new_column_names_map = new_column_names_map
         self.advanced_encoding = advanced_encoding
         self.all_columns = []
+        self.get_feature_names_out = self.get_feature_names_out()
+        
 
     def fit(self, X, y=None):
         # there's no fitting, we apply the same one hot encoding to all data sets
