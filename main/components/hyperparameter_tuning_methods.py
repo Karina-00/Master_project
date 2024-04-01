@@ -14,7 +14,7 @@ from sklearn.tree import plot_tree
 
 
 
-def get_feature_importance_lasso(pipeline: Pipeline, target_attribute, significance_threshold=0.1):
+def get_feature_importance_lasso(pipeline: Pipeline, target_attribute, significance_threshold=0):
     lasso_coefs = pipeline['model'].coef_
     column_names = pipeline['preprocessor'].get_feature_names_out()
 
@@ -45,7 +45,7 @@ def get_feature_importance_tree(pipeline: Pipeline, target_attribute, significan
 
     return feature_importances_sorted
 
-def get_feature_importance_rf(pipeline: Pipeline, target_attribute, significance_threshold=0.01):
+def get_feature_importance_rf(pipeline: Pipeline, target_attribute, significance_threshold=0.0):
     feature_importances = pipeline['model'].feature_importances_
     column_names = pipeline['preprocessor'].get_feature_names_out()
 
@@ -145,8 +145,8 @@ def hyperparameter_tuning_linear(X_train, y_train, target_attribute, model, cont
 
     #  plot train error vs test error
     sns.lineplot(x=main_parameter, y='value', hue='variable', data=pd.melt(results_df, [main_parameter]))
-    if main_parameter == 'alpha':
-        plt.xscale("log")
+    # if main_parameter == 'alpha':
+    #     plt.xscale("log")
     plt.show()
 
     return results_df
