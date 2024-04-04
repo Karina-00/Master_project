@@ -40,7 +40,7 @@ def get_feature_importance_tree(pipeline: Pipeline, target_attribute, significan
     plt.show()
 
     plot_tree(pipeline['model'], feature_names=column_names)
-    plt.savefig(f'charts/decision_tree_.pdf')
+    plt.savefig(f'charts/trees/{target_attribute[:4]}_decision_tree.pdf')
     plt.show()
 
     return feature_importances_sorted
@@ -57,6 +57,19 @@ def get_feature_importance_rf(pipeline: Pipeline, target_attribute, significance
     plt.show()
 
     return feature_importances_sorted
+
+
+# def get_feature_importance_svm(pipeline: Pipeline, target_attribute, significance_threshold=0.0):
+#     coefficients = pipeline['model'].coef_[0]
+#     column_names = pipeline['preprocessor'].get_feature_names_out()
+
+#     feature_importances_df = pd.DataFrame({'feature': column_names, 'importance': coefficients})
+#     feature_importances_sorted = feature_importances_df[feature_importances_df['importance'].abs() > significance_threshold].sort_values(by='importance', key=abs, ascending=False)
+
+#     sns.barplot(data=feature_importances_sorted, x="importance", y="feature").set(title=target_attribute)
+#     plt.show()
+
+#     return feature_importances_sorted
 
 
 def show_plots(y_true, y_pred, dataset_label):
