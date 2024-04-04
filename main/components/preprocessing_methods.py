@@ -8,14 +8,24 @@ from main.constants import CATEGORICAL_ATTRIBUTES, CONTINUOUS_ATTRIBUTES
 
 
 
-def get_continuous_attributes_except(attribute):
-    remaining_attributes = CONTINUOUS_ATTRIBUTES.copy()
-    remaining_attributes.remove(attribute)
+def get_all_attributes_except(all_attributes, attribute_to_remove):
+    remaining_attributes = all_attributes.copy()
+    if attribute_to_remove in remaining_attributes:
+        remaining_attributes.remove(attribute_to_remove)
     return remaining_attributes
 
 
-def explore_all_variations_of_preprocessing(X_train, y_train, target_attribute, models, continuous_preprocessings, categorical_preprocessings):
-    scores_df = pd.DataFrame(columns=['continuous_preprocessing', 'categorical_pteprocessing', 'model', 'MAE'])  # TODO: change to R2
+def get_continuous_attributes_except(attribute):
+    return get_all_attributes_except(CONTINUOUS_ATTRIBUTES, attribute)
+
+
+def get_categorical_attributes_except(attribute):
+    return get_all_attributes_except(CATEGORICAL_ATTRIBUTES, attribute)
+
+
+
+def explore_all_variations_of_preprocessing(X_train, y_train, target_attribute, models, continuous_preprocessings, categorical_preprocessings, scoring_metric='neg_mean_absolute_error'):
+    scores_df = pd.DataFrame(columns=['continuous_preprocessing', 'categorical_pteprocessing', 'model', scoring_metric])
 
     i = 1
     total_iterations = len(continuous_preprocessings) * len(categorical_preprocessings) * len(models)
@@ -27,14 +37,12 @@ def explore_all_variations_of_preprocessing(X_train, y_train, target_attribute, 
                     verbose_feature_names_out=False,
                     transformers=[
                         ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
-                        ('cat', categorical_preprocessor, CATEGORICAL_ATTRIBUTES)
+                        ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
                     ])
 
                 pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
                 cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
-                scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring='neg_mean_absolute_error', n_jobs=-1)
-
-                # scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring='r2', n_jobs=-1)
+                scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring=scoring_metric, n_jobs=-1)
                 
                 scores_df.loc[len(scores_df)] = [continuous_preprocessor_name, categorical_preprocessor_name, str(model), abs(scores.mean())]
                 print(f'{i}/{total_iterations}', str(model), continuous_preprocessor_name, categorical_preprocessor_name, scores, abs(scores.mean()))

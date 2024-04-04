@@ -9,7 +9,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
 from main.constants import CATEGORICAL_ATTRIBUTES
-from main.components.preprocessing_methods import get_continuous_attributes_except
+from main.components.preprocessing_methods import get_continuous_attributes_except,get_categorical_attributes_except
 from sklearn.tree import plot_tree
 
 
@@ -133,85 +133,86 @@ def train_model(model, target_attribute, X_train, y_train, X_test, y_test, conti
 
 
 
-def hyperparameter_tuning_linear(X_train, y_train, target_attribute, model, continuous_preprocessor, categorical_preprocessor, param_grid, main_parameter='alpha'):
+def hyperparameter_tuning_general(X_train, y_train, target_attribute, model, continuous_preprocessor, categorical_preprocessor, param_grid, scoring_metric='neg_mean_absolute_error'):
     preprocessor = ColumnTransformer(
         verbose_feature_names_out=False,
         transformers=[
             ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
-            ('cat', categorical_preprocessor, CATEGORICAL_ATTRIBUTES)
+            ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
         ])
 
     pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
 
     cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
-    grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring='neg_mean_absolute_error', return_train_score=True, verbose=3, n_jobs=-1).fit(X_train, y_train)
-
-    # grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring='r2', return_train_score=True, verbose=3, n_jobs=-1).fit(X_train, y_train)
+    grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring=scoring_metric, return_train_score=True, verbose=3, n_jobs=-1)
+    grid_search.fit(X_train, y_train)
 
     cv_results = grid_search.cv_results_
-    
-    main_param_values = cv_results[f'param_model__{main_parameter}']
-    mean_test_score = abs(cv_results['mean_test_score'])
-    mean_train_score = abs(cv_results['mean_train_score'])
 
-    results_df = pd.DataFrame({main_parameter: main_param_values, 'mean_train_mae': mean_train_score, 'mean_test_mae': mean_test_score})
+    best_params = grid_search.best_params_
+    best_score = grid_search.best_score_
 
-    #  plot train error vs test error
-    sns.lineplot(x=main_parameter, y='value', hue='variable', data=pd.melt(results_df, [main_parameter]))
-    # if main_parameter == 'alpha':
-    #     plt.xscale("log")
-    plt.show()
-
-    return results_df
-
-
-def hyperparameter_tuning_general(X_train, y_train, target_attribute, model, continuous_preprocessor, categorical_preprocessor, param_grid):
-    preprocessor = ColumnTransformer(
-        verbose_feature_names_out=False,
-        transformers=[
-            ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
-            ('cat', categorical_preprocessor, CATEGORICAL_ATTRIBUTES)
-        ])
-
-    pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
-
-    cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
-    grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring='neg_mean_absolute_error', return_train_score=True, verbose=3, n_jobs=-1).fit(X_train, y_train)
-
-    # grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring='r2', return_train_score=True, verbose=3, n_jobs=-1).fit(X_train, y_train)
-    cv_results = grid_search.cv_results_
+    print("Best parameters:", best_params)
+    print(f"Best score ({scoring_metric}):", best_score)
     
     tuned_param_values = cv_results[f'params']
     mean_test_score = abs(cv_results['mean_test_score'])
     mean_train_score = abs(cv_results['mean_train_score'])
 
-    results_df = pd.DataFrame({'params': tuned_param_values, 'mean_train_mae': mean_train_score, 'mean_test_mae': mean_test_score})
-    # sns.lineplot(x='params', y='value', hue='variable', data=pd.melt(results_df, [tuned_param_values]))
-    # sns.lineplot(x='params', y='value', hue='variable', data=pd.melt(results_df, tuned_param_values))
-    # plt.show()
+    results_df = pd.DataFrame({'params': tuned_param_values, f'mean_train_score': mean_train_score, 'mean_test_score': mean_test_score})
 
     return results_df
 
 
-def compare_random_states(X_train, y_train, model, target_attribute, continuous_preprocessor, categorical_preprocessor):
+
+def hyperparameter_tuning_linear(X_train, y_train, target_attribute, model, continuous_preprocessor, categorical_preprocessor, param_grid, main_parameter='alpha', scoring_metric='neg_mean_absolute_error'):
+    preprocessor = ColumnTransformer(
+        verbose_feature_names_out=False,
+        transformers=[
+            ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
+            ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
+        ])
+
+    pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
+
+    cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
+    grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring=scoring_metric, return_train_score=True, verbose=3, n_jobs=-1)
+    grid_search.fit(X_train, y_train)
+
+    cv_results = grid_search.cv_results_
+    best_params = grid_search.best_params_
+    best_score = grid_search.best_score_
+    print("Best parameters:", best_params)
+    print(f"Best score ({scoring_metric}):", best_score)
+    
+    main_param_values = cv_results[f'param_model__{main_parameter}']
+    mean_test_score = abs(cv_results['mean_test_score'])
+    mean_train_score = abs(cv_results['mean_train_score'])
+
+    results_df = pd.DataFrame({main_parameter: main_param_values, 'mean_train_score': mean_train_score, 'mean_test_score': mean_test_score})
+    sns.lineplot(x=main_parameter, y='value', hue='variable', data=pd.melt(results_df, [main_parameter]))
+    plt.show()
+
+    return results_df
+
+
+def compare_random_states(X_train, y_train, model, target_attribute, continuous_preprocessor, categorical_preprocessor, scoring_metric='neg_mean_absolute_error'):
     random_options = range(1,100)
 
-    tune_df = pd.DataFrame(index=random_options, columns=['cv_mae'])
+    tune_df = pd.DataFrame(index=random_options, columns=['cv_score'])
 
     for random_o in tqdm(random_options):
         preprocessor = ColumnTransformer(
             verbose_feature_names_out=False,
             transformers=[
                 ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
-                ('cat', categorical_preprocessor, CATEGORICAL_ATTRIBUTES)
+                ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
             ])
         model.set_params(random_state=random_o)
         pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
         cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=random_o)
-        cv_score = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring='neg_mean_absolute_error', n_jobs=-1)
+        cv_score = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring=scoring_metric, n_jobs=-1)
 
-        # cv_score = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring='r2', n_jobs=-1)
-
-        tune_df.at[random_o,'cv_mae'] = cv_score.mean()
+        tune_df.at[random_o,'cv_score'] = cv_score.mean()
 
     return tune_df
