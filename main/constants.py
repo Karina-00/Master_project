@@ -6,6 +6,8 @@ VITAMINE_D = 'vitamin 25-OH D ng/ml'
 PROLACTIN = 'prolactin'
 PCO = 'PCO 0-healthy control, 1-PCOS, 2-FHA 3-POF, 4-High Andro'
 
+CLASS_NAMES = ['healthy', 'PCOS', 'FHA', 'High Andro']
+
 
 CATEGORICAL_ATTRIBUTES = [
     'PCO 0-healthy control, 1-PCOS, 2-FHA 3-POF, 4-High Andro', 'Hypertension', 'WC>88', 'WHR>0,85 (WHO)', 'WHR>0,8 (NIDDK)', 'WHTR>0,5', 

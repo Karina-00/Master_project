@@ -8,9 +8,26 @@ from sklearn.model_selection import RepeatedKFold, cross_val_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from tqdm import tqdm
-from main.constants import CATEGORICAL_ATTRIBUTES
+from main.constants import CATEGORICAL_ATTRIBUTES, CLASS_NAMES
 from main.components.preprocessing_methods import get_continuous_attributes_except,get_categorical_attributes_except
 from sklearn.tree import plot_tree
+
+
+def get_feature_importance_logistic_regressison(pipeline: Pipeline, target_attribute, significance_threshold=0):
+    coef_lists = pipeline['model'].coef_
+    column_names = pipeline['preprocessor'].get_feature_names_out()
+    all_feature_importances = {}
+
+    for i, coef in enumerate(coef_lists):
+        feature_importnces = [*zip(column_names, coef)]
+        feature_importances_df = pd.DataFrame(feature_importnces, columns=['feature', 'importance'])
+        feature_importances_sorted = feature_importances_df[feature_importances_df['importance'].abs() > significance_threshold].sort_values(by='importance', key=abs, ascending=False)
+
+        sns.barplot(feature_importances_sorted.head(20), x="importance", y="feature").set(title=CLASS_NAMES[i])
+        plt.show()
+        all_feature_importances[CLASS_NAMES[i]] = feature_importances_sorted
+
+    return feature_importances_sorted
 
 
 
