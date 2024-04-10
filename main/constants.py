@@ -14,8 +14,11 @@ CATEGORICAL_ATTRIBUTES = [
     'overweight/obesity 0-normal/low, 1-overweight, 2-obesity',
     'irregular cycles (0-nie, 1-tak)', 'ovulation (0-brak, 1-obecna)', 'PCO ovary morfology in USG (0-brak, 1--obecna)',
     'stromal hypertrophy in ovary (0-brak, 1-obecny)', 'acne', 'hirsutism', 'hyperandrogenism', 'hypothyroidism', 'nodules 0-lack, 1-RL,  2-LL, 3-both', 'chronic thyroiditis',
-    'follicules >12', 'hyperlipidemia', 'elevated LDL and TG', 'CHOL>200', 'HDL<50', 'LDL>135', 'TG>150', 'Impaired Fasting Glucose ', 'Impaired Glucose Tolerance', 
-    'month of birth', 'quarter of the year',
+    'follicules >12', 
+    # 'hyperlipidemia', 'elevated LDL and TG', 
+    'CHOL>200', 'HDL<50', 'LDL>135', 
+    # 'TG>150', 'Impaired Fasting Glucose ', 'Impaired Glucose Tolerance', 
+    # 'month of birth', 'quarter of the year',
     ]
 
 
@@ -60,7 +63,7 @@ CONTINUOUS_ATTRIBUTES = ['IGF-1 ng/ml (N: 100-311)',
  'MCH pg',
  'MCHC g/dl',
  'RDW-CV %',
- 'NRBC x10^3/ul',
+#  'NRBC x10^3/ul',
  'PLT x10^3/ul',
  'PDW fl',
  'MPV fl',
