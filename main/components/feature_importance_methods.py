@@ -2,6 +2,19 @@ from functools import reduce
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import RepeatedKFold
+from sklearn.pipeline import Pipeline
+
+from sklearn.inspection import permutation_importance
+from sklearn.feature_selection import mutual_info_regression, RFECV
+
+
+from main.constants import CATEGORICAL_ATTRIBUTES
+from main.components.preprocessing_methods import get_continuous_attributes_except,get_categorical_attributes_except
 
 
 def rename_importnace_col(df, prefix):
@@ -27,11 +40,11 @@ def rank_importances(feature_importance_df):
     return ranked_df
 
 
-def feature_selection_mutual_info_regression(X_train, y_train):
+def feature_selection_mutual_info_regression(X_train, y_train, target_attribute, continuous_preprocessor, categorical_preprocessor):
     preprocessor = ColumnTransformer(
     verbose_feature_names_out=False,
     transformers=[
-        ('num', continuous_preprocessor, get_continuous_attributes_except(VITAMINE_D)),
+        ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
         ('cat', categorical_preprocessor, CATEGORICAL_ATTRIBUTES)
     ])
 
@@ -46,18 +59,18 @@ def feature_selection_mutual_info_regression(X_train, y_train):
     feature_importances_sorted = feature_importances.sort_values(by='mutual_info_score', key=abs, ascending=False)
 
     plt.figure(figsize=(10, 30))
-    sns.barplot(feature_importances_sorted, x="mutual_info_score", y="feature", legend=False)
+    sns.barplot(feature_importances_sorted, x="mutual_info_score", y="feature", legend=False).set(title=f"Mutual information importance - {target_attribute}")
     plt.show()
 
     return feature_importances_sorted
 
 
 
-def recursive_feature_elimination(X_train, y_train, model, target_attribute, scoring_metric="neg_mean_absolute_error"):
+def recursive_feature_elimination(X_train, y_train, model, target_attribute, continuous_preprocessing, categorical_preprocessor, scoring_metric="neg_mean_absolute_error"):
     preprocessor = ColumnTransformer(
         verbose_feature_names_out=False,
         transformers=[
-            ('num', tree_continuous_preprocessing, get_continuous_attributes_except(target_attribute)),
+            ('num', continuous_preprocessing, get_continuous_attributes_except(target_attribute)),
             ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
         ])
 
