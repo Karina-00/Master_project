@@ -27,7 +27,11 @@ def get_feature_importance_logistic_regressison(pipeline: Pipeline, target_attri
         plt.show()
         all_feature_importances[CLASS_NAMES[i]] = feature_importances_sorted
 
-    return feature_importances_sorted
+    combined_df = pd.concat(all_feature_importances.values())
+    average_importances = combined_df.groupby('feature').importance.mean().reset_index()
+    average_importances = average_importances.sort_values(by='importance', key=abs, ascending=False)
+
+    return average_importances
 
 
 
@@ -70,6 +74,7 @@ def get_feature_importance_rf(pipeline: Pipeline, target_attribute, significance
     feature_importances_df = pd.DataFrame(feature_importnces_with_columns, columns=['feature', 'importance'])
     feature_importances_sorted = feature_importances_df[feature_importances_df['importance'].abs() > significance_threshold].sort_values(by='importance', key=abs, ascending=False)
 
+    plt.figure(figsize=(10, 30))
     sns.barplot(feature_importances_sorted, x="importance", y="feature").set(title=target_attribute)
     plt.show()
 
