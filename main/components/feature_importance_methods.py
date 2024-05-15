@@ -8,15 +8,20 @@ import seaborn as sns
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import RepeatedKFold
 from sklearn.pipeline import Pipeline
+from imblearn.pipeline import Pipeline as ImblearnPipeline
+
+# https://jundongl.github.io/scikit-feature/algorithms.html
+from skfeature.function.statistical_based import gini_index
 
 from sklearn.inspection import permutation_importance
-from sklearn.feature_selection import mutual_info_regression, RFECV
+from sklearn.feature_selection import mutual_info_classif, mutual_info_regression, RFECV
 
 from sklearn.tree import plot_tree
 
+
 import dtreeviz
 
-from main.constants import CATEGORICAL_ATTRIBUTES, CLASS_NAMES
+from main.constants import CATEGORICAL_ATTRIBUTES, CLASS_NAMES, CONTINUOUS_ATTRIBUTES
 from main.components.preprocessing_methods import get_continuous_attributes_except,get_categorical_attributes_except
 
 
@@ -116,6 +121,43 @@ def plot_fancy_tree(pipeline, X_train, y_train, target_name, class_names=None, i
     return viz_model.view(scale=1.8)
 
 
+def plot_fancy_tree_smote(pipeline, X_train, y_train, target_name, show_artificial_data=False, class_names=None, is_classification=True):
+    preprocessing_pipeline = ImblearnPipeline(steps=pipeline.steps[:-1])
+
+    if show_artificial_data:
+        smote_pipeline = ImblearnPipeline(steps=pipeline.steps[:-2])
+        _, y_transformed = smote_pipeline.fit_resample(X_train, y_train)
+        X_transformed = preprocessing_pipeline.fit_transform(X_train, y_train)
+    else:
+        new_pipeline = Pipeline(steps=[pipeline.steps[0], pipeline.steps[2]])
+        X_transformed = new_pipeline.fit_transform(X_train, y_train)
+        y_transformed = y_train
+    
+    column_names = preprocessing_pipeline.get_feature_names_out()
+
+    if is_classification:
+        viz_model = dtreeviz.model(pipeline['model'],
+                            X_train=X_transformed,
+                            y_train=y_transformed.astype(int),
+                            feature_names=column_names,
+                            target_name=target_name,
+                            class_names=class_names,
+                            )
+    else:
+        viz_model = dtreeviz.model(pipeline['model'],
+                    X_train=X_transformed,
+                    y_train=y_train,
+                    feature_names=column_names,
+                    target_name=target_name,
+                    )
+        
+    #  if I wanted to save the tree
+    # v = viz_model.view(scale=1.8)
+    # v.show()
+    # v.save("charts/trees/pco_multiclass_decision_tree.svg")  
+
+    return viz_model.view(scale=1.8)
+
 def get_feature_importance_rf(pipeline: Pipeline, target_attribute, significance_threshold=0.0):
     feature_importances = pipeline['model'].feature_importances_
     column_names = pipeline['preprocessor'].get_feature_names_out()
@@ -169,11 +211,14 @@ def rank_importances(feature_importance_df):
 
 
 def feature_selection_mutual_info_regression(X_train, y_train, target_attribute, continuous_preprocessor, categorical_preprocessor):
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+
     preprocessor = ColumnTransformer(
     verbose_feature_names_out=False,
     transformers=[
-        ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
-        ('cat', categorical_preprocessor, CATEGORICAL_ATTRIBUTES)
+        ('num', continuous_preprocessor, continuous_attributes),
+        ('cat', categorical_preprocessor, categorical_attributes)
     ])
 
     pipeline = Pipeline([('preprocessor', preprocessor)])
@@ -194,13 +239,44 @@ def feature_selection_mutual_info_regression(X_train, y_train, target_attribute,
     return original_feature_importance
 
 
+def feature_selection_mutual_info_classification(X_train, y_train, target_attribute, continuous_preprocessor, categorical_preprocessor):
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+
+    preprocessor = ColumnTransformer(
+    verbose_feature_names_out=False,
+    transformers=[
+        ('num', continuous_preprocessor, continuous_attributes),
+        ('cat', categorical_preprocessor, categorical_attributes)
+    ])
+
+    pipeline = Pipeline([('preprocessor', preprocessor)])
+
+    X_transformed = pipeline.fit_transform(X_train, y_train)
+
+    mutual_info_scores = mutual_info_classif(X_transformed, y_train)
+    feature_names = preprocessor.get_feature_names_out()
+
+    feature_importances = pd.DataFrame({'feature': feature_names, 'mutual_info_score': mutual_info_scores})
+    feature_importances_sorted = feature_importances.sort_values(by='mutual_info_score', key=abs, ascending=False)
+    original_feature_importance = get_original_feature_importance_df(feature_importances_sorted, 'mutual_info_score')
+
+    plt.figure(figsize=(10, 30))
+    sns.barplot(original_feature_importance, x="mutual_info_score", y="feature", legend=False)
+    plt.show()
+
+    return original_feature_importance
+
 
 def recursive_feature_elimination(X_train, y_train, model, target_attribute, continuous_preprocessing, categorical_preprocessor, scoring_metric="neg_mean_absolute_error"):
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+
     preprocessor = ColumnTransformer(
         verbose_feature_names_out=False,
         transformers=[
-            ('num', continuous_preprocessing, get_continuous_attributes_except(target_attribute)),
-            ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
+            ('num', continuous_preprocessing, continuous_attributes),
+            ('cat', categorical_preprocessor, categorical_attributes)
         ])
 
     min_features_to_select = 1
@@ -244,24 +320,27 @@ def recursive_feature_elimination(X_train, y_train, model, target_attribute, con
     return ranked_featrures_rfecv_ranked
 
 
-def get_permutation_importance(X_train, y_train, model, continuous_preprocessor, categorical_preprocessor, target_attribute):
+def get_permutation_importance(X_train, y_train, model, continuous_preprocessor, categorical_preprocessor, target_attribute, threshold=0):
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+
     preprocessor = ColumnTransformer(
         verbose_feature_names_out=False,
         transformers=[
-            ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
-            ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
+            ('num', continuous_preprocessor, continuous_attributes),
+            ('cat', categorical_preprocessor, categorical_attributes)
         ])
     pipeline = Pipeline([('preprocessor', preprocessor), ('model', model)])
 
     pipeline.fit(X_train, y_train)
 
-    result = permutation_importance(pipeline, X_train, y_train, n_repeats=10, n_jobs=-1)
+    result = permutation_importance(pipeline, X_train, y_train, n_repeats=10, n_jobs=-1, random_state=42)
     importances = result.importances_mean
 
     df_importances = pd.DataFrame({'feature': list(X_train.columns), 'importance': importances})
     df_importances_sorted = df_importances.sort_values(by='importance', ascending=False)
 
-    permutation_importance_selected_features = df_importances_sorted[df_importances_sorted['importance'] > 0]
+    permutation_importance_selected_features = df_importances_sorted[df_importances_sorted['importance'] > threshold]
 
     print(f'selected {len(permutation_importance_selected_features)} features')
     plt.figure(figsize=(10, 30))
@@ -271,12 +350,15 @@ def get_permutation_importance(X_train, y_train, model, continuous_preprocessor,
     return permutation_importance_selected_features
 
 
-def feature_selection_chi2(feature_selection_model, target_attribute, continuous_preprocessor, categorical_preprocessor,  X_train, y_train):
+def feature_selection_chi2(feature_selection_model, target_attribute, continuous_preprocessor, categorical_preprocessor,  X_train, y_train, threshold=0.05):
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+
     preprocessor = ColumnTransformer(
         verbose_feature_names_out=False,
         transformers=[
-            ('num', continuous_preprocessor, get_continuous_attributes_except(target_attribute)),
-            ('cat', categorical_preprocessor, get_categorical_attributes_except(target_attribute))
+            ('num', continuous_preprocessor, continuous_attributes),
+            ('cat', categorical_preprocessor, categorical_attributes)
         ])
     pipeline = Pipeline([('preprocessor', preprocessor), ('feature_selection', feature_selection_model)])
 
@@ -285,14 +367,56 @@ def feature_selection_chi2(feature_selection_model, target_attribute, continuous
     feature_importances = dict(zip(preprocessor.get_feature_names_out(), feature_selection_model.pvalues_))
     sorted_importances = sorted(feature_importances.items(), key=lambda x: abs(x[1]), reverse=False)
     df_importances = pd.DataFrame(sorted_importances, columns=['feature', 'p_value'])
-    original_feature_importance = get_original_feature_importance_df(df_importances, importance_label='p_value')
-    original_feature_importance.sort_values(by='p_value', ascending=True)
 
-    selected_indices = feature_selection_model.get_support(indices=True)
-    selected_feature_names = [preprocessor.get_feature_names_out()[i] for i in selected_indices]
+    original_feature_importance = get_original_feature_importance_df(df_importances, importance_label='p_value')
+    original_feature_importance.sort_values(by='p_value', ascending=True, inplace=True)
+
+
+    selected_features = original_feature_importance[original_feature_importance['p_value'] < threshold]
+    selected_feature_names = list(selected_features['feature'].values)
+    print(f'Selected {len(selected_feature_names)} features')
+
+    # print(selected_feature_names)
+    # selected_indices = feature_selection_model.get_support(indices=True)
+    # selected_feature_names = [preprocessor.get_feature_names_out()[i] for i in selected_indices]
 
     plt.figure(figsize=(10, 30))
     sns.barplot(original_feature_importance, x="p_value", y="feature", legend=False)
+    plt.show()
+
+    return selected_feature_names
+
+
+def feature_selection_gini_index(target_attribute, continuous_preprocessor, categorical_preprocessor, X_train, y_train, threshold=0.5):
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+    
+    preprocessor = ColumnTransformer(
+        verbose_feature_names_out=False,
+        transformers=[
+            ('num', continuous_preprocessor, continuous_attributes),
+            ('cat', categorical_preprocessor, categorical_attributes)
+        ])
+    pipeline = Pipeline([('preprocessor', preprocessor)])
+    pipeline.set_output(transform='default')
+
+    X_train_transformed = pipeline.fit_transform(X_train, y_train)
+
+    scores = gini_index.gini_index(X_train_transformed, y_train.astype(int))
+
+    gini_index_scores = pd.DataFrame({'feature':  preprocessor.get_feature_names_out(), 'gini_index': scores})
+    gini_index_scores.sort_values(by='gini_index', inplace=True)
+
+    original_feature_importance = get_original_feature_importance_df(gini_index_scores, importance_label='gini_index')
+    original_feature_importance.sort_values(by='gini_index', ascending=True, inplace=True)
+
+
+    selected_features = original_feature_importance[original_feature_importance['gini_index'] < threshold]
+    selected_feature_names = list(selected_features['feature'].values)
+    print(f'Selected {len(selected_feature_names)} features')
+
+    plt.figure(figsize=(10, 30))
+    sns.barplot(original_feature_importance, x="gini_index", y="feature", legend=False)
     plt.show()
 
     return selected_feature_names

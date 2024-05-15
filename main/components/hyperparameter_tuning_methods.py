@@ -149,7 +149,10 @@ def validate_model_classification(model, target_attribute, class_names, X_train,
 
 
 def validate_model_classification_smote(model, target_attribute, class_names, X_train, y_train, X_test, y_test, continous_imputer_pipeline, categorical_imputer_pipeline, feature_importance_method):
-    pipeline = get_smote_pipeline(model, target_attribute, continous_imputer_pipeline, categorical_imputer_pipeline)
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+    
+    pipeline = get_smote_pipeline(model, target_attribute, continuous_attributes, categorical_attributes, continous_imputer_pipeline, categorical_imputer_pipeline)
     pipeline.fit(X_train, y_train)
 
     y_pred_train = pipeline.predict(X_train)
@@ -204,12 +207,12 @@ def hyperparameter_tuning_general(X_train, y_train, target_attribute, model, con
     return results_df
 
 
-def get_smote_pipeline(model, target_attribute, continous_imputer_pipeline, categorical_imputer_pipeline):
+def get_smote_pipeline(model, target_attribute, continuous_attributes, categorical_attributes, continous_imputer_pipeline, categorical_imputer_pipeline):
     imputer_transformer = ColumnTransformer(
         verbose_feature_names_out=False,
         transformers=[
-            ('num', continous_imputer_pipeline, CONTINUOUS_ATTRIBUTES),
-            ('cat', categorical_imputer_pipeline, get_categorical_attributes_except(target_attribute))
+            ('num', continous_imputer_pipeline, continuous_attributes),
+            ('cat', categorical_imputer_pipeline, categorical_attributes)
         ])
     imputer_transformer.set_output(transform='pandas')
 
@@ -238,7 +241,10 @@ def get_smote_pipeline(model, target_attribute, continous_imputer_pipeline, cate
 
 
 def hyperparameter_tuning_clasification_smote(X_train, y_train, target_attribute, model, continous_imputer_pipeline, categorical_imputer_pipeline, param_grid, scoring_metric='f1'):
-    pipeline = get_smote_pipeline(model, target_attribute, continous_imputer_pipeline, categorical_imputer_pipeline)
+    categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
+    continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
+     
+    pipeline = get_smote_pipeline(model, target_attribute, continuous_attributes, categorical_attributes, continous_imputer_pipeline, categorical_imputer_pipeline)
     
     cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=42)
     grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring=scoring_metric, return_train_score=True, verbose=3, n_jobs=-1)
