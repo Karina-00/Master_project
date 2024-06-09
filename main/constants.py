@@ -159,8 +159,8 @@ sex_hormones_attributes = [
     ]
 # gospodarka węglowodanowa (włączając oporność i wrazliwość na insulinę)
 carbohydrate_metabolism_attributes = [
-    'glucose 0 mg/dl', 'glucose  120 mg/dl', 'insulin 0 uU/ml', 'Insulin 120 uU/ml', 'HOMA', 'Matsuda', 'QUICKI (N<0,357)', 'Impaired Fasting Glucose ',
-    'Impaired Glucose Tolerance',
+    'glucose 0 mg/dl', 'glucose  120 mg/dl', 'insulin 0 uU/ml', 'Insulin 120 uU/ml', 'HOMA', 'Matsuda', 'QUICKI (N<0,357)', 
+    # 'Impaired Fasting Glucose ', 'Impaired Glucose Tolerance',
     ]
 # parametry antropometryczne
 anthropometric_attributes = [
@@ -175,7 +175,8 @@ thyroid_attributes = [
 # parametry zapalne
 inflammatory_attributes = [
     'WBC x10^3/ul', 'neutrophil x10^3/ul', 'lymphocytes x10^3/ul', 'monocytes x10^3/ul', 'eosinocytes x10^3/ul', 'basophils x10^3/ul', '% neutrophil ', '% lymphocytes ',
-    '% monocytes', '%eosinocytes ', '%basophils ', 'RBC x10^6ul', 'Hemoglobin [g/dl]', 'hematocrit [%]', 'HTC/Hb', 'MCV fl', 'MCH pg', 'MCHC g/dl', 'RDW-CV %', 'NRBC x10^3/ul',
+    '% monocytes', '%eosinocytes ', '%basophils ', 'RBC x10^6ul', 'Hemoglobin [g/dl]', 'hematocrit [%]', 'HTC/Hb', 'MCV fl', 'MCH pg', 'MCHC g/dl', 'RDW-CV %', 
+    # 'NRBC x10^3/ul',
     'PLT x10^3/ul', 'PDW fl', 'MPV fl', 'P-LCR %', 'PLT/WBC', 'MPV/PLT', 'PLR', 'limf/mono', 'NLR (stosunek neutrofili do limfocytów)',
     'L/WCC (leukocyty do całkowitej liczby krwinek białych)', 'eos/leukocyty', 'CRP mg/l',
     ]
@@ -188,6 +189,27 @@ attribute_groups = [
     circulatory_system_attributes, sex_hormones_attributes, carbohydrate_metabolism_attributes, anthropometric_attributes,
     thyroid_attributes, inflammatory_attributes, iron_attributes, calcium_attributes,
     ]
+
+
+vitamin_d_associated_features = ['creatinine mg/dl', 'Parathormone pg/ml', 'phosphorus mg/dl']
+igf_associated_features = ['HOMA', 'QUICKI (N<0,357)']
+prolactin_associated_features = ['LH', 'cortisol nmol/l 8:00', '17-OH-progesterone ng/ml', 'T/SHBG', 'hyperandrogenism', 
+                                 'PCO ovary morfology in USG (0-brak, 1--obecna)', 'LH/FSH', 'hirsutism', 'Testosterone/DHT', 'follicules >12',
+                                 'Volume of the Left Ovary', 'testosterone nmol/l', 'Androstendione ng/ml']
+
+
+
+index_features = [
+    'LAP INDEX - Lipid accumulation product index',
+    'VAI - Visceral adiposity index',
+    'BAI - Body adiposity index',
+    'TyG Index - Trigliceride-glucose index',
+    'AIP -Atherogenic index of plasma',
+    'Atherogenic index (AI) (LDL-C/HDL-C) ',
+    'coronary risk index (CRI) (TG/HDL-C)',
+    'FTI (free testosterone index)',
+]
+
 
 
 columns_for_one_hot_encoding = {'PCO 0-healthy control, 1-PCOS, 2-FHA 3-POF, 4-High Andro': 'PCO',
