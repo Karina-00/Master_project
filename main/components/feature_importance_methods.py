@@ -30,6 +30,7 @@ from main.components.preprocessing_methods import get_continuous_attributes_exce
 def get_original_feature_importance_df(transformed_feature_importance_df, importance_label='importance'):
     transformed_feature_importance_df['original_feature'] = transformed_feature_importance_df['feature'].apply(lambda x: x.split('_')[0])
     original_feature_importance_df = transformed_feature_importance_df.groupby('original_feature')[importance_label].sum().reset_index()
+    original_feature_importance_df[importance_label] = original_feature_importance_df[importance_label].clip(upper=1)
     original_feature_importance_df.rename(columns={'original_feature': 'feature'}, inplace=True)
 
     return original_feature_importance_df.sort_values(by=importance_label, key=abs, ascending=False)
@@ -91,6 +92,11 @@ def get_feature_importance_tree(pipeline: Pipeline, target_attribute, significan
     plt.show()
 
     return original_feature_importance
+
+
+def get_feature_importance_knn(pipeline: Pipeline, target_attribute, significance_threshold=0):
+
+    return None
 
 
 def plot_fancy_tree(pipeline, X_train, y_train, target_name, class_names=None, is_classification=True):
@@ -156,7 +162,7 @@ def plot_fancy_tree_smote(pipeline, X_train, y_train, target_name, show_artifici
     # v.show()
     # v.save("charts/trees/pco_multiclass_decision_tree.svg")  
 
-    return viz_model.view(scale=1.8)
+    return viz_model.view(scale=1.8, ticks_fontsize=6)
 
 def get_feature_importance_rf(pipeline: Pipeline, target_attribute, significance_threshold=0.0):
     feature_importances = pipeline['model'].feature_importances_

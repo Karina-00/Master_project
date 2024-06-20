@@ -144,8 +144,11 @@ CONTINUOUS_ATTRIBUTES = ['IGF-1 ng/ml (N: 100-311)',
 
 # parametry związane z układem krążenia i ryzykiem jego chorób
 circulatory_system_attributes = [
-    'proBNP', 'systolic BP (ciśnienie skurczowe)', 'diastolic BP (ciśnienie rozskurczowe)', 'Hypertension', 'hyperlipidemia', 'elevated LDL and TG',
-    'CHOL mg/dl ', 'CHOL mmol/l', 'CHOL>200', ' HDL mg/dl', 'HDL mmol/l', 'HDL<50', 'LDL mg/dl', 'LDL mmol/l', 'LDL>135', 'TG', 'TG mmol/l', 'TG>150',
+    'proBNP', 'systolic BP (ciśnienie skurczowe)', 'diastolic BP (ciśnienie rozskurczowe)', 'Hypertension', 
+    # 'hyperlipidemia', 
+    # 'elevated LDL and TG',
+    'CHOL mg/dl ', 'CHOL mmol/l', 'CHOL>200', ' HDL mg/dl', 'HDL mmol/l', 'HDL<50', 'LDL mg/dl', 'LDL mmol/l', 'LDL>135', 'TG', 'TG mmol/l', 
+    # 'TG>150',
     'Atherogenic index (AI) (LDL-C/HDL-C) ', 'coronary risk index (CRI) (TG/HDL-C)', 'VAI - Visceral adiposity index', 'BAI - Body adiposity index',
     'LAP INDEX - Lipid accumulation product index', 'TyG Index - Trigliceride-glucose index', 'AIP -Atherogenic index of plasma',
     ]
@@ -193,7 +196,7 @@ attribute_groups = [
 
 vitamin_d_associated_features = ['creatinine mg/dl', 'Parathormone pg/ml', 'phosphorus mg/dl']
 igf_associated_features = ['HOMA', 'QUICKI (N<0,357)']
-prolactin_associated_features = ['LH', 'cortisol nmol/l 8:00', '17-OH-progesterone ng/ml', 'T/SHBG', 'hyperandrogenism', 
+prolactin_associated_features = ['LH', 'cortisol nmol/l  8:00', '17-OH-progesterone ng/ml', 'T/SHBG', 'hyperandrogenism', 
                                  'PCO ovary morfology in USG (0-brak, 1--obecna)', 'LH/FSH', 'hirsutism', 'Testosterone/DHT', 'follicules >12',
                                  'Volume of the Left Ovary', 'testosterone nmol/l', 'Androstendione ng/ml']
 

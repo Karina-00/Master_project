@@ -13,6 +13,11 @@ from tqdm import tqdm
 from imblearn.pipeline import Pipeline as ImblearnPipeline
 from imblearn.over_sampling import SMOTENC
 
+from sklearn.metrics import make_scorer
+from imblearn.metrics import geometric_mean_score
+gmean_scorer = make_scorer(geometric_mean_score)
+
+
 
 from sklearn.preprocessing import OneHotEncoder
 
@@ -138,8 +143,13 @@ def validate_model_classification(model, target_attribute, class_names, X_train,
     report_train = classification_report(y_train, y_pred_train, target_names=class_names)
     report_test = classification_report(y_test, y_pred_test,  target_names=class_names)
 
+    g_mean_train = round(geometric_mean_score(y_train, y_pred_train), 3)
+    g_mean_test = round(geometric_mean_score(y_test, y_pred_test), 3)
+
     print('Training set')
+    print("G-mean:", g_mean_train)
     print(report_train)
+    print('G-mean:', g_mean_test)
     print('Test set')
     print(report_test)
 
@@ -163,8 +173,13 @@ def validate_model_classification_smote(model, target_attribute, class_names, X_
     report_train = classification_report(y_train, y_pred_train, target_names=class_names)
     report_test = classification_report(y_test, y_pred_test,  target_names=class_names)
 
+    g_mean_train = round(geometric_mean_score(y_train, y_pred_train), 3)
+    g_mean_test = round(geometric_mean_score(y_test, y_pred_test), 3)
+
     print('Training set')
+    print("G-mean:", g_mean_train)
     print(report_train)
+    print('G-mean:', g_mean_test)
     print('Test set')
     print(report_test)
 
@@ -216,7 +231,7 @@ def get_smote_pipeline(model, target_attribute, continuous_attributes, categoric
         ])
     imputer_transformer.set_output(transform='pandas')
 
-    smt = SMOTENC(random_state=42, categorical_features=get_categorical_attributes_except(target_attribute))
+    smt = SMOTENC(random_state=42, categorical_features=categorical_attributes)
 
     categorical_one_hot_encoder = Pipeline([
         ('one_hot_encoder', OneHotEncoder(handle_unknown='error', drop='if_binary', sparse_output=False)),
@@ -226,7 +241,7 @@ def get_smote_pipeline(model, target_attribute, continuous_attributes, categoric
             verbose_feature_names_out=False,
             remainder='passthrough',
             transformers=[
-                ('cat', categorical_one_hot_encoder, get_categorical_attributes_except(target_attribute)),
+                ('cat', categorical_one_hot_encoder, categorical_attributes),
             ]).set_output(transform='pandas')
     
 
