@@ -88,7 +88,7 @@ def get_feature_importance_tree(pipeline: Pipeline, target_attribute, significan
     plt.show()
 
     plot_tree(pipeline['model'], filled=True, rounded=True, feature_names=column_names)
-    plt.savefig(f'charts/trees/{target_attribute[:4]}_decision_tree.pdf')
+    # plt.savefig(f'charts/trees/{target_attribute[:4]}_decision_tree.pdf')
     plt.show()
 
     return original_feature_importance
