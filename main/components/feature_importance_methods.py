@@ -216,7 +216,7 @@ def rank_importances(feature_importance_df):
     return ranked_df
 
 
-def feature_selection_mutual_info_regression(X_train, y_train, target_attribute, continuous_preprocessor, categorical_preprocessor):
+def feature_selection_mutual_info_regression(X_train, y_train, target_attribute, continuous_preprocessor, categorical_preprocessor, figsize=(10, 30)):
     categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
     continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
 
@@ -238,14 +238,14 @@ def feature_selection_mutual_info_regression(X_train, y_train, target_attribute,
     feature_importances_sorted = feature_importances.sort_values(by='importance', key=abs, ascending=False)
     original_feature_importance = get_original_feature_importance_df(feature_importances_sorted)
 
-    plt.figure(figsize=(10, 30))
+    plt.figure(figsize=figsize)
     sns.barplot(original_feature_importance, x="importance", y="feature", legend=False).set(title=f"Mutual information importance - {target_attribute}")
     plt.show()
 
     return original_feature_importance
 
 
-def feature_selection_mutual_info_classification(X_train, y_train, target_attribute, continuous_preprocessor, categorical_preprocessor):
+def feature_selection_mutual_info_classification(X_train, y_train, target_attribute, continuous_preprocessor, categorical_preprocessor, figsize=(10, 30)):
     categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
     continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
 
@@ -267,14 +267,14 @@ def feature_selection_mutual_info_classification(X_train, y_train, target_attrib
     feature_importances_sorted = feature_importances.sort_values(by='mutual_info_score', key=abs, ascending=False)
     original_feature_importance = get_original_feature_importance_df(feature_importances_sorted, 'mutual_info_score')
 
-    plt.figure(figsize=(10, 30))
+    plt.figure(figsize=figsize)
     sns.barplot(original_feature_importance, x="mutual_info_score", y="feature", legend=False)
     plt.show()
 
     return original_feature_importance
 
 
-def recursive_feature_elimination(X_train, y_train, model, target_attribute, continuous_preprocessing, categorical_preprocessor, scoring_metric="neg_mean_absolute_error"):
+def recursive_feature_elimination(X_train, y_train, model, target_attribute, continuous_preprocessing, categorical_preprocessor, scoring_metric="neg_mean_absolute_error", figsize=(20, 10)):
     categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
     continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
 
@@ -313,7 +313,7 @@ def recursive_feature_elimination(X_train, y_train, model, target_attribute, con
     n_scores = len(rfecv.cv_results_["mean_test_score"])
     scores = abs(rfecv.cv_results_["mean_test_score"])
 
-    plt.figure(figsize=(20,10))
+    plt.figure(figsize=figsize)
     plt.xlabel("Number of features selected")
     plt.ylabel("Mean test score")
     plt.errorbar(
@@ -326,7 +326,7 @@ def recursive_feature_elimination(X_train, y_train, model, target_attribute, con
     return ranked_featrures_rfecv_ranked
 
 
-def get_permutation_importance(X_train, y_train, model, continuous_preprocessor, categorical_preprocessor, target_attribute, threshold=0):
+def get_permutation_importance(X_train, y_train, model, continuous_preprocessor, categorical_preprocessor, target_attribute, threshold=0, figsize=(10, 30)):
     categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
     continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
 
@@ -349,14 +349,14 @@ def get_permutation_importance(X_train, y_train, model, continuous_preprocessor,
     permutation_importance_selected_features = df_importances_sorted[df_importances_sorted['importance'] > threshold]
 
     print(f'selected {len(permutation_importance_selected_features)} features')
-    plt.figure(figsize=(10, 30))
+    plt.figure(figsize=figsize)
     sns.barplot(df_importances_sorted, x="importance", y="feature", legend=False).set(title=f'Permutation importance - {target_attribute}')
     plt.show()
 
     return permutation_importance_selected_features
 
 
-def feature_selection_chi2(feature_selection_model, target_attribute, continuous_preprocessor, categorical_preprocessor,  X_train, y_train, threshold=0.05):
+def feature_selection_chi2(feature_selection_model, target_attribute, continuous_preprocessor, categorical_preprocessor,  X_train, y_train, threshold=0.05, figsize=(10, 30)):
     categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
     continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
 
@@ -386,14 +386,14 @@ def feature_selection_chi2(feature_selection_model, target_attribute, continuous
     # selected_indices = feature_selection_model.get_support(indices=True)
     # selected_feature_names = [preprocessor.get_feature_names_out()[i] for i in selected_indices]
 
-    plt.figure(figsize=(10, 30))
+    plt.figure(figsize=figsize)
     sns.barplot(original_feature_importance, x="p_value", y="feature", legend=False)
     plt.show()
 
     return selected_feature_names
 
 
-def feature_selection_gini_index(target_attribute, continuous_preprocessor, categorical_preprocessor, X_train, y_train, threshold=0.5):
+def feature_selection_gini_index(target_attribute, continuous_preprocessor, categorical_preprocessor, X_train, y_train, threshold=0.5, figsize=(10, 30)):
     categorical_attributes = list(set(get_categorical_attributes_except(target_attribute)) & set(X_train.columns))
     continuous_attributes = list(set(get_continuous_attributes_except(target_attribute)) & set(X_train.columns))
     
@@ -421,7 +421,7 @@ def feature_selection_gini_index(target_attribute, continuous_preprocessor, cate
     selected_feature_names = list(selected_features['feature'].values)
     print(f'Selected {len(selected_feature_names)} features')
 
-    plt.figure(figsize=(10, 30))
+    plt.figure(figsize=figsize)
     sns.barplot(original_feature_importance, x="gini_index", y="feature", legend=False)
     plt.show()
 
