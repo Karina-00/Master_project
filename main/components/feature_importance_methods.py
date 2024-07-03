@@ -239,7 +239,7 @@ def feature_selection_mutual_info_regression(X_train, y_train, target_attribute,
     original_feature_importance = get_original_feature_importance_df(feature_importances_sorted)
 
     plt.figure(figsize=figsize)
-    sns.barplot(original_feature_importance, x="importance", y="feature", legend=False).set(title=f"Mutual information importance - {target_attribute}")
+    sns.barplot(original_feature_importance[original_feature_importance['importance']>0], x="importance", y="feature", legend=False).set(title=f"Mutual information importance - {target_attribute}")
     plt.show()
 
     return original_feature_importance
