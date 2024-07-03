@@ -1,6 +1,3 @@
-# import pandas as pd
-
-
 IGF = 'IGF-1 ng/ml (N: 100-311)'
 VITAMINE_D = 'vitamin 25-OH D ng/ml'
 PROLACTIN = 'prolactin'
@@ -22,8 +19,6 @@ CATEGORICAL_ATTRIBUTES = [
     ]
 
 
-# dataset_file_path = 'data/preprocessed_dataset.csv'
-# df = pd.read_csv(dataset_file_path)
 
 CONTINUOUS_ATTRIBUTES = ['IGF-1 ng/ml (N: 100-311)',
  'proBNP',
