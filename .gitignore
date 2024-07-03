@@ -1,5 +1,5 @@
 data/password.txt
-data/
+data/*
 
 
 # Byte-compiled / optimized / DLL files
