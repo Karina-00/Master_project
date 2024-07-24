@@ -27,9 +27,12 @@ from main.components.preprocessing_methods import get_continuous_attributes_exce
 
 
 #  Transforms feature importance df with one hot encoded features into a feature importance df with original features
-def get_original_feature_importance_df(transformed_feature_importance_df, importance_label='importance'):
+def get_original_feature_importance_df(transformed_feature_importance_df, importance_label='importance', aggregation_method='sum'):
     transformed_feature_importance_df['original_feature'] = transformed_feature_importance_df['feature'].apply(lambda x: x.split('_')[0])
-    original_feature_importance_df = transformed_feature_importance_df.groupby('original_feature')[importance_label].sum().reset_index()
+    if aggregation_method == 'sum':
+        original_feature_importance_df = transformed_feature_importance_df.groupby('original_feature')[importance_label].sum().reset_index()
+    if aggregation_method == 'mean':
+        original_feature_importance_df = transformed_feature_importance_df.groupby('original_feature')[importance_label].mean().reset_index()
     original_feature_importance_df[importance_label] = original_feature_importance_df[importance_label].clip(upper=1)
     original_feature_importance_df.rename(columns={'original_feature': 'feature'}, inplace=True)
 
@@ -268,7 +271,7 @@ def feature_selection_mutual_info_classification(X_train, y_train, target_attrib
     original_feature_importance = get_original_feature_importance_df(feature_importances_sorted, 'mutual_info_score')
 
     plt.figure(figsize=figsize)
-    sns.barplot(original_feature_importance, x="mutual_info_score", y="feature", legend=False)
+    sns.barplot(original_feature_importance[original_feature_importance['mutual_info_score']>0], x="mutual_info_score", y="feature", legend=False)
     plt.show()
 
     return original_feature_importance
@@ -413,7 +416,7 @@ def feature_selection_gini_index(target_attribute, continuous_preprocessor, cate
     gini_index_scores = pd.DataFrame({'feature':  preprocessor.get_feature_names_out(), 'gini_index': scores})
     gini_index_scores.sort_values(by='gini_index', inplace=True)
 
-    original_feature_importance = get_original_feature_importance_df(gini_index_scores, importance_label='gini_index')
+    original_feature_importance = get_original_feature_importance_df(gini_index_scores, importance_label='gini_index', aggregation_method='mean')
     original_feature_importance.sort_values(by='gini_index', ascending=True, inplace=True)
 
 
