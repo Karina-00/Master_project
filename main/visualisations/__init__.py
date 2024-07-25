@@ -9,3 +9,4 @@ sys.path.append(project_root)
 
 
 DATASET_PATH = os.path.abspath(os.path.join(project_root, 'data/preprocessed_dataset.csv'))
+CHARTS_PATH = os.path.abspath(os.path.join(project_root, 'charts'))
